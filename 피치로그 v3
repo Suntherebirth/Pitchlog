@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>이글스 피치로그</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h1 { text-align: center; }
+    .field { margin-bottom: 15px; text-align: center; }
+    .field input { padding: 8px; font-size: 1rem; width: 200px; margin: 5px; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; }
+    button {
+      padding: 15px 20px;
+      font-size: 1.2rem;
+      flex: 1 1 30%;
+      min-width: 80px;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    #downloadBtn, #undoBtn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>⚾ 이글스 피치로그</h1>
+
+  <div class="field">
+    <label>투수 이름: </label>
+    <input type="text" id="pitcherName" placeholder="예: 김도현" />
+  </div>
+
+  <div class="field">
+    <label>현재 이닝: </label>
+    <input type="text" id="inning" value="1회" />
+    <label>상대한 타자 순번: </label>
+    <input type="number" id="batterIndex" value="1" min="1" />
+    <label>상대 타순: </label>
+    <input type="text" id="oppoOrder" value="1번" />
+  </div>
+
+  <div class="buttons">
+    <button onclick="addLog('B')">B (볼)</button>
+    <button onclick="addLog('SS')">SS (스윙)</button>
+    <button onclick="addLog('CS')">CS (루킹)</button>
+    <button onclick="addLog('F')">F (파울)</button>
+    <button onclick="addLog('WP')">WP (와일드피치)</button>
+    <button onclick="addLog('H')">H (타격)</button>
+  </div>
+
+  <table id="logTable">
+    <thead>
+      <tr>
+        <th>투구수</th>
+        <th>상대한 타자 순번</th>
+        <th>이닝</th>
+        <th>상대 타순</th>
+        <th>결과</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 기록이 여기에 추가됨 -->
+    </tbody>
+  </table>
+
+  <button id="undoBtn" onclick="undoLast()">↩️ 마지막 로그 삭제</button>
+  <button id="downloadBtn" onclick="downloadCSV()">📥 CSV 다운로드</button>
+
+  <script>
+    let pitchCount = 1;
+
+    function addLog(result) {
+      const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+      const inning = document.getElementById('inning').value;
+      const batterIndex = document.getElementById('batterIndex').value;
+      const oppoOrder = document.getElementById('oppoOrder').value;
+
+      const newRow = table.insertRow();
+      newRow.insertCell(0).innerText = pitchCount++;
+      newRow.insertCell(1).innerText = batterIndex;
+      newRow.insertCell(2).innerText = inning;
+      newRow.insertCell(3).innerText = oppoOrder;
+      newRow.insertCell(4).innerText = result;
+    }
+
+    function undoLast() {
+      const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+      const rowCount = table.rows.length;
+      if (rowCount > 0) {
+        table.deleteRow(rowCount - 1);
+        pitchCount--;
+      }
+    }
+
+    function downloadCSV() {
+      const pitcherName = document.getElementById("pitcherName").value || "pitcher";
+      const rows = Array.from(document.querySelectorAll("table tr"));
+      const csv = rows.map(row => {
+        return Array.from(row.querySelectorAll("th, td")).map(cell => cell.innerText).join(",");
+      }).join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.setAttribute("href", URL.createObjectURL(blob));
+      link.setAttribute("download", `피치로그_${pitcherName}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+
+</body>
+</html>
