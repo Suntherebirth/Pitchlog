@@ -231,6 +231,21 @@ function nextBatter() {
   const batterInput = document.getElementById('batterOrder');
   batterInput.value = (parseInt(batterInput.value) % 9) + 1;
 }
+
+// 키보드 단축키 등록
+document.addEventListener("keydown", function (event) {
+  if (event.target.tagName === "INPUT") return;
+  const key = event.key.toLowerCase();
+  switch (key) {
+    case "s": addPitch("SS (스윙 S)"); break;
+    case "c": addPitch("CS (루킹 S)"); break;
+    case "f": addPitch("F (파울)"); break;
+    case "h": addPitch("H (타격)"); break;
+    case "b": addPitch("B (볼)"); break;
+    case "w": addPitch("WP (와일드피치)"); break;
+  }
+});
 </script>
+
 </body>
 </html>
