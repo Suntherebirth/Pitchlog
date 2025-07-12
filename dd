@@ -96,7 +96,7 @@
     }
   </style>
 </head>
-<body>
+<body tabIndex="0">
 
 <header>
   <div class="title">이글스 피치로그 시스템</div>
@@ -232,18 +232,20 @@ function nextBatter() {
   batterInput.value = (parseInt(batterInput.value) % 9) + 1;
 }
 
-// 키보드 단축키 등록
-document.addEventListener("keydown", function (event) {
-  if (event.target.tagName === "INPUT") return;
-  const key = event.key.toLowerCase();
-  switch (key) {
-    case "s": addPitch("SS (스윙 S)"); break;
-    case "c": addPitch("CS (루킹 S)"); break;
-    case "f": addPitch("F (파울)"); break;
-    case "h": addPitch("H (타격)"); break;
-    case "b": addPitch("B (볼)"); break;
-    case "w": addPitch("WP (와일드피치)"); break;
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.focus();
+
+  document.body.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    switch (e.key.toLowerCase()) {
+      case 's': addPitch('SS (스윙 S)'); break;
+      case 'c': addPitch('CS (루킹 S)'); break;
+      case 'f': addPitch('F (파울)'); break;
+      case 'h': addPitch('H (타격)'); break;
+      case 'b': addPitch('B (볼)'); break;
+      case 'w': addPitch('WP (와일드피치)'); break;
+    }
+  });
 });
 </script>
 
