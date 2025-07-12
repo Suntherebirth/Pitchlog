@@ -104,16 +104,16 @@
     <div>
       <label>이닝</label>
       <input id="inning" type="number" value="1" />
-      <button onclick="nextInning()">다음 이닝</button>
+      <button onclick="nextInning()">다음 이닝(P)</button>
     </div>
     <div>
       <label>타순</label>
       <input id="batterOrder" type="number" value="1" />
-      <button onclick="nextBatter()">다음 타자</button>
+      <button onclick="nextBatter()">다음 타자(L)</button>
     </div>
     <div>
       <label>상대한 타자 수</label>
-      <span id="batterFaced">0</span>
+      <input id="batterFacedInput" type="number" value="0" />
     </div>
   </div>
 </header>
@@ -155,10 +155,14 @@ let deleteMode = false;
 function addPitch(result) {
   const inning = document.getElementById('inning').value;
   const batterOrder = parseInt(document.getElementById('batterOrder').value);
+  batterFaced = parseInt(document.getElementById('batterFacedInput').value);
+
   if (log.length === 0 || batterOrder !== prevBatter) {
     batterFaced++;
     prevBatter = batterOrder;
+    document.getElementById('batterFacedInput').value = batterFaced;
   }
+
   const entry = {
     pitchCount: pitchCount++,
     batterFaced,
@@ -193,7 +197,6 @@ function renderLog() {
   setTimeout(() => {
     window.scrollTo({ top: document.body.scrollHeight + 200, behavior: 'smooth' });
   }, 100);
-  document.getElementById('batterFaced').textContent = batterFaced;
 }
 
 function deleteLastLog() {
@@ -232,22 +235,26 @@ function nextBatter() {
   batterInput.value = (parseInt(batterInput.value) % 9) + 1;
 }
 
-// ✅ 키보드 단축키 기능
+// ✅ 키보드 단축키
 window.addEventListener('keydown', (e) => {
   if (['INPUT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement.tagName)) return;
 
   const keyMap = {
-    s: 'SS (스윙 S)',
-    c: 'CS (루킹 S)',
-    f: 'F (파울)',
-    h: 'H (타격)',
-    b: 'B (볼)',
-    w: 'WP (와일드피치)'
+    s: () => addPitch('SS (스윙 S)'),
+    c: () => addPitch('CS (루킹 S)'),
+    f: () => addPitch('F (파울)'),
+    h: () => addPitch('H (타격)'),
+    b: () => addPitch('B (볼)'),
+    w: () => addPitch('WP (와일드피치)'),
+    p: () => nextInning(),
+    l: () => nextBatter(),
+    Backspace: () => deleteLastLog()
   };
 
-  const lowerKey = e.key.toLowerCase();
-  if (keyMap[lowerKey]) {
-    addPitch(keyMap[lowerKey]);
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (keyMap[key]) {
+    e.preventDefault();
+    keyMap[key]();
   }
 });
 </script>
