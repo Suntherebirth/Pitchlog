@@ -2,117 +2,235 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>이글스 피치로그</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>이글스 피치로그 시스템</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    h1 { text-align: center; }
-    .field { margin-bottom: 15px; text-align: center; }
-    .field input { padding: 8px; font-size: 1rem; width: 200px; margin: 5px; }
-    .buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; }
-    button {
-      padding: 15px 20px;
-      font-size: 1.2rem;
-      flex: 1 1 30%;
-      min-width: 80px;
+    body {
+      margin: 0;
+      font-family: sans-serif;
     }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    #downloadBtn, #undoBtn {
-      margin-top: 10px;
+    header {
+      position: fixed;
+      top: 0;
       width: 100%;
-      padding: 12px;
-      font-size: 1rem;
+      background: #f5f5f5;
+      padding: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .inputs {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 10px;
+    }
+    .inputs div {
+      display: flex;
+      align-items: center;
+    }
+    .inputs label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .inputs input {
+      width: 60px;
+      padding: 4px;
+      font-size: 16px;
+      text-align: center;
+    }
+    .inputs button {
+      margin-left: 5px;
+      padding: 4px 8px;
+      font-size: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 160px;
+    }
+    thead th {
+      position: sticky;
+      top: 100px;
+      background: #ddd;
+      padding: 8px;
+      font-weight: bold;
+      border-bottom: 2px solid #999;
+      z-index: 10;
+    }
+    tbody td {
+      text-align: center;
+      padding: 6px;
+      border-bottom: 1px solid #ccc;
+    }
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+    .pitch-btn {
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+    .strike { background: #e0f0ff; border: 1px solid #339; }
+    .ball { background: #ffe0e0; border: 1px solid #933; }
+    .system { background: #ddd; }
+    #logTable {
+      margin-bottom: 100px;
     }
   </style>
 </head>
 <body>
 
-  <h1>⚾ 이글스 피치로그</h1>
-
-  <div class="field">
-    <label>투수 이름: </label>
-    <input type="text" id="pitcherName" placeholder="예: 김도현" />
+<header>
+  <div class="title">이글스 피치로그 시스템</div>
+  <div class="inputs">
+    <div>
+      <label>이닝</label>
+      <input id="inning" type="number" value="1" />
+      <button onclick="nextInning()">다음 이닝</button>
+    </div>
+    <div>
+      <label>타순</label>
+      <input id="batterOrder" type="number" value="1" />
+      <button onclick="nextBatter()">다음 타자</button>
+    </div>
+    <div>
+      <label>상대한 타자 수</label>
+      <span id="batterFaced">0</span>
+    </div>
   </div>
+</header>
 
-  <div class="field">
-    <label>현재 이닝: </label>
-    <input type="text" id="inning" value="1회" />
-    <label>상대한 타자 순번: </label>
-    <input type="number" id="batterIndex" value="1" min="1" />
-    <label>상대 타순: </label>
-    <input type="text" id="oppoOrder" value="1번" />
-  </div>
+<table id="logTable">
+  <thead>
+    <tr>
+      <th>투구수</th>
+      <th>상대한 타자 수</th>
+      <th>이닝</th>
+      <th>상대 타순</th>
+      <th>결과</th>
+    </tr>
+  </thead>
+  <tbody id="logBody"></tbody>
+</table>
 
-  <div class="buttons">
-    <button onclick="addLog('B')">B (볼)</button>
-    <button onclick="addLog('SS')">SS (스윙)</button>
-    <button onclick="addLog('CS')">CS (루킹)</button>
-    <button onclick="addLog('F')">F (파울)</button>
-    <button onclick="addLog('WP')">WP (와일드피치)</button>
-    <button onclick="addLog('H')">H (타격)</button>
-  </div>
+<div class="footer">
+  <button class="pitch-btn strike" onclick="addPitch('SS (스윙 S)')">SS (스윙 S)</button>
+  <button class="pitch-btn strike" onclick="addPitch('CS (루킹 S)')">CS (루킹 S)</button>
+  <button class="pitch-btn strike" onclick="addPitch('F (파울)')">F (파울)</button>
+  <button class="pitch-btn strike" onclick="addPitch('H (타격)')">H (타격)</button>
+  <div style="width: 20px;"></div>
+  <button class="pitch-btn ball" onclick="addPitch('B (볼)')">B (볼)</button>
+  <button class="pitch-btn ball" onclick="addPitch('WP (와일드피치)')">WP (와일드피치)</button>
+  <div style="width: 20px;"></div>
+  <button class="pitch-btn system" onclick="deleteLastLog()">마지막 로그 삭제</button>
+  <button class="pitch-btn system" onclick="toggleDeleteMode()">삭제 모드 전환</button>
+  <button class="pitch-btn system" onclick="downloadCSV()">CSV 저장</button>
+</div>
 
-  <table id="logTable">
-    <thead>
-      <tr>
-        <th>투구수</th>
-        <th>상대한 타자 순번</th>
-        <th>이닝</th>
-        <th>상대 타순</th>
-        <th>결과</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- 기록이 여기에 추가됨 -->
-    </tbody>
-  </table>
+<script>
+let log = [];
+let pitchCount = 1;
+let batterFaced = 0;
+let prevBatter = 1;
+let deleteMode = false;
 
-  <button id="undoBtn" onclick="undoLast()">↩️ 마지막 로그 삭제</button>
-  <button id="downloadBtn" onclick="downloadCSV()">📥 CSV 다운로드</button>
+function addPitch(result) {
+  const inning = document.getElementById('inning').value;
+  const batterOrder = parseInt(document.getElementById('batterOrder').value);
+  if (log.length === 0 || batterOrder !== prevBatter) {
+    batterFaced++;
+    prevBatter = batterOrder;
+  }
+  const entry = {
+    pitchCount: pitchCount++,
+    batterFaced,
+    inning,
+    batterOrder,
+    result
+  };
+  log.push(entry);
+  renderLog();
+}
 
-  <script>
-    let pitchCount = 1;
-
-    function addLog(result) {
-      const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
-      const inning = document.getElementById('inning').value;
-      const batterIndex = document.getElementById('batterIndex').value;
-      const oppoOrder = document.getElementById('oppoOrder').value;
-
-      const newRow = table.insertRow();
-      newRow.insertCell(0).innerText = pitchCount++;
-      newRow.insertCell(1).innerText = batterIndex;
-      newRow.insertCell(2).innerText = inning;
-      newRow.insertCell(3).innerText = oppoOrder;
-      newRow.insertCell(4).innerText = result;
-    }
-
-    function undoLast() {
-      const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
-      const rowCount = table.rows.length;
-      if (rowCount > 0) {
-        table.deleteRow(rowCount - 1);
-        pitchCount--;
+function renderLog() {
+  const tbody = document.getElementById('logBody');
+  tbody.innerHTML = '';
+  log.forEach((entry, index) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${entry.batterFaced}</td>
+      <td>${entry.inning}</td>
+      <td>${entry.batterOrder}</td>
+      <td>${entry.result}</td>
+    `;
+    tr.addEventListener('click', () => {
+      if (deleteMode) {
+        log.splice(index, 1);
+        renderLog();
       }
-    }
+    });
+    tbody.appendChild(tr);
+  });
+  setTimeout(() => {
+    window.scrollTo({ top: document.body.scrollHeight + 200, behavior: 'smooth' });
+  }, 100);
+  document.getElementById('batterFaced').textContent = batterFaced;
+}
 
-    function downloadCSV() {
-      const pitcherName = document.getElementById("pitcherName").value || "pitcher";
-      const rows = Array.from(document.querySelectorAll("table tr"));
-      const csv = rows.map(row => {
-        return Array.from(row.querySelectorAll("th, td")).map(cell => cell.innerText).join(",");
-      }).join("\n");
+function deleteLastLog() {
+  if (log.length > 0) {
+    log.pop();
+    renderLog();
+  }
+}
 
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.setAttribute("href", URL.createObjectURL(blob));
-      link.setAttribute("download", `피치로그_${pitcherName}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  </script>
+function toggleDeleteMode() {
+  deleteMode = !deleteMode;
+  alert(deleteMode ? "삭제 모드 ON (삭제할 로그를 클릭하세요)" : "삭제 모드 OFF");
+}
 
+function downloadCSV() {
+  let csv = '투구수,상대한 타자 수,이닝,상대 타순,결과\n';
+  log.forEach((entry, i) => {
+    csv += `${i + 1},${entry.batterFaced},${entry.inning},${entry.batterOrder},${entry.result}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pitchlog.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function nextInning() {
+  const inningInput = document.getElementById('inning');
+  inningInput.value = parseInt(inningInput.value) + 1;
+}
+
+function nextBatter() {
+  const batterInput = document.getElementById('batterOrder');
+  batterInput.value = (parseInt(batterInput.value) % 9) + 1;
+}
+</script>
 </body>
 </html>
