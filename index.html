@@ -32,8 +32,8 @@
     
     .btn-step { background: #4a90e2; color: white; border: none; padding: 4px 8px; margin-left: 5px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 
-    /* 로그가 가려지지 않도록 하단 여백을 대폭 늘림 (아이패드 가로 대응) */
-    table { width: 100%; border-collapse: collapse; margin-top: 110px; margin-bottom: 200px; background: white; }
+    /* 아이패드 가로 대응: 하단 여백을 250px로 충분히 확보 */
+    table { width: 100%; border-collapse: collapse; margin-top: 110px; margin-bottom: 250px; background: white; }
     thead th { position: sticky; top: 100px; background: #eee; color: #333; padding: 10px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
     tbody td { text-align: center; padding: 12px 8px; border-bottom: 1px solid #eee; font-size: 15px; }
     
@@ -42,15 +42,16 @@
 
     .footer {
       position: fixed; bottom: 0; width: 100%; background: white;
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
       padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); z-index: 100; box-sizing: border-box;
     }
 
-    .pitch-btn { padding: 15px 5px; font-size: 14px; font-weight: bold; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; transition: 0.1s; }
+    .pitch-btn { padding: 15px 2px; font-size: 12px; font-weight: bold; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; transition: 0.1s; }
     .strike { background: #e3f2fd; color: #0d47a1; border-color: #bbdefb; }
     .ball { background: #ffebee; color: #b71c1c; border-color: #ffcdd2; }
-    .system { background: #f5f5f5; color: #333; grid-column: span 1; }
-    .save { background: var(--primary-blue); color: white; grid-column: span 2; }
+    .system { background: #f5f5f5; color: #333; }
+    .reset { background: #333; color: white; } /* 전체 초기화 버튼 */
+    .save { background: var(--primary-blue); color: white; grid-column: span 2; font-size: 14px; }
     
     .pitch-btn:active { background: #ddd; transform: translateY(2px); }
     .delete-mode-active { background-color: #ffeb3b !important; border: 2px dashed red !important; }
@@ -83,8 +84,9 @@
   <button class="pitch-btn strike" onclick="addPitch('H(타격)')">H (H)</button>
   <button class="pitch-btn ball" onclick="addPitch('B(볼)')">B (B)</button>
   <button class="pitch-btn ball" onclick="addPitch('WP(폭투)')">WP (W)</button>
-  <button class="pitch-btn system" onclick="deleteLastLog()">↩취소 (BS)</button>
+  <button class="pitch-btn system" onclick="deleteLastLog()">↩취소(BS)</button>
   <button class="pitch-btn system" onclick="toggleDeleteMode()" id="delModeBtn">🚫삭제</button>
+  <button class="pitch-btn reset" onclick="resetAll()">🧹초기화</button>
   <button class="pitch-btn save" onclick="downloadCSV()">💾 CSV 저장</button>
 </div>
 
@@ -150,11 +152,13 @@ function renderLog() {
     tbody.appendChild(tr);
   });
   
-  // 입력 시 가장 최근 로그가 화면 중앙에 보이도록 스크롤 조정
-  window.scrollTo({
-    top: document.body.scrollHeight,
-    behavior: 'smooth'
-  });
+  // 아이패드 가로모드 대응: 스크롤 위치를 최하단보다 약간 위로 조정하여 푸터에 가리지 않게 함
+  setTimeout(() => {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth'
+    });
+  }, 50);
 }
 
 function deleteLastLog() {
@@ -168,6 +172,19 @@ function deleteIndex(index) {
   if (confirm(`${index + 1}번 투구를 삭제하시겠습니까?`)) {
     log.splice(index, 1);
     saveAndRender();
+  }
+}
+
+// 전체 초기화 기능
+function resetAll() {
+  if (confirm("경고: 모든 데이터가 삭제됩니다. 정말 초기화하시겠습니까?")) {
+    if (confirm("다시 한번 확인합니다. 저장되지 않은 데이터는 모두 사라집니다.")) {
+      log = [];
+      document.getElementById('inning').value = 1;
+      document.getElementById('batterOrder').value = 1;
+      saveAndRender();
+      alert("모든 데이터가 초기화되었습니다.");
+    }
   }
 }
 
