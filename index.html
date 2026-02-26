@@ -25,7 +25,7 @@
 
     .title { font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 5px; color: #fff; }
     
-    /* 볼카운트 전광판 스타일 */
+    /* 볼카운트 전광판 (S-B 순서로 변경) */
     .count-display {
       text-align: center; font-size: 20px; font-weight: 800; margin-bottom: 8px; 
       color: #ffeb3b; text-shadow: 1px 1px 2px black;
@@ -38,17 +38,15 @@
     
     .btn-step { background: #4a90e2; color: white; border: none; padding: 3px 6px; margin-left: 4px; border-radius: 4px; cursor: pointer; font-size: 10px; }
 
-    /* 표 레이아웃 조정 */
     table { width: 100%; border-collapse: collapse; margin-top: 135px; margin-bottom: 250px; background: white; table-layout: fixed; }
     thead th { position: sticky; top: 125px; background: #eee; color: #333; padding: 10px 5px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
     tbody td { text-align: center; padding: 12px 5px; border-bottom: 1px solid #eee; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     
-    /* 열 너비 설정 */
     th:nth-child(1), td:nth-child(1) { width: 10%; } /* # */
     th:nth-child(2), td:nth-child(2) { width: 12%; } /* 이닝 */
     th:nth-child(3), td:nth-child(3) { width: 12%; } /* 타순 */
-    th:nth-child(4), td:nth-child(4) { width: 51%; } /* 결과 (가장 넓게) */
-    th:nth-child(5), td:nth-child(5) { width: 15%; font-size: 11px; color: #666; } /* 타자상대 (좁게) */
+    th:nth-child(4), td:nth-child(4) { width: 51%; } /* 결과 */
+    th:nth-child(5), td:nth-child(5) { width: 15%; font-size: 11px; color: #666; } /* 타자상대 */
 
     .row-strike { background-color: #f0f7ff; }
     .row-ball { background-color: #fff5f5; }
@@ -74,8 +72,8 @@
 <body>
 
 <header>
-  <div class="title">EAGLES PITCH-LOG SYSTEM</div>
-  <div id="countView" class="count-display">B 0 - S 0</div>
+  <div class="title">이글스 피치로그 시스템</div>
+  <div id="countView" class="count-display">S 0 - B 0</div>
   <div class="inputs">
     <div><label>이닝</label><input id="inning" type="number" value="1" /><button class="btn-step" onclick="nextInning()">+1(P)</button></div>
     <div><label>타순</label><input id="batterOrder" type="number" value="1" /><button class="btn-step" onclick="nextBatter()">+1(L)</button></div>
@@ -97,12 +95,12 @@
 </table>
 
 <div class="footer">
-  <button class="pitch-btn strike" onclick="addPitch('SS(스윙)')">SS (S)</button>
-  <button class="pitch-btn strike" onclick="addPitch('CS(루킹)')">CS (C)</button>
-  <button class="pitch-btn strike" onclick="addPitch('F(파울)')">F (F)</button>
-  <button class="pitch-btn strike" onclick="addPitch('H(타격)')">H (H)</button>
-  <button class="pitch-btn ball" onclick="addPitch('B(볼)')">B (B)</button>
-  <button class="pitch-btn ball" onclick="addPitch('WP(폭투)')">WP (W)</button>
+  <button class="pitch-btn strike" onclick="addPitch('스윙S')">스윙 (S)</button>
+  <button class="pitch-btn strike" onclick="addPitch('루킹S')">루킹 (C)</button>
+  <button class="pitch-btn strike" onclick="addPitch('파울')">파울 (F)</button>
+  <button class="pitch-btn strike" onclick="addPitch('타격')">타격 (H)</button>
+  <button class="pitch-btn ball" onclick="addPitch('볼')">볼 (B)</button>
+  <button class="pitch-btn ball" onclick="addPitch('폭투')">폭투 (W)</button>
   <button class="pitch-btn system" onclick="deleteLastLog()">↩취소(BS)</button>
   <button class="pitch-btn system" onclick="toggleDeleteMode()" id="delModeBtn">🚫삭제</button>
   <button class="pitch-btn reset" onclick="resetAll()">🧹초기화</button>
@@ -126,7 +124,6 @@ function addPitch(result) {
   let lastEntry = log[log.length - 1];
   let currentBatterFaced = lastEntry ? lastEntry.batterFaced : 0;
   
-  // 첫 입력이거나 타순/이닝이 바뀌었을 때 상대 타자수 증가 및 카운트 초기화
   if (!lastEntry || lastEntry.batterOrder !== batterOrder || lastEntry.inning !== inning) {
     currentBatterFaced++;
     currentS = 0;
@@ -136,22 +133,22 @@ function addPitch(result) {
   let finalResult = result;
   let isOutOrWalk = false;
 
-  if (result.includes('SS') || result.includes('CS')) {
+  if (result.includes('스윙') || result.includes('루킹')) {
     currentS++;
     if (currentS >= 3) {
-      finalResult += " -> [K 삼진]";
+      finalResult += " -> [삼진K]";
       isOutOrWalk = true;
     }
-  } else if (result.includes('F')) {
+  } else if (result.includes('파울')) {
     if (currentS < 2) currentS++;
-  } else if (result.includes('B') || result.includes('WP')) {
+  } else if (result.includes('볼') || result.includes('폭투')) {
     currentB++;
     if (currentB >= 4) {
-      finalResult += " -> [BB 볼넷]";
+      finalResult += " -> [볼넷BB]";
       isOutOrWalk = true;
     }
-  } else if (result.includes('H')) {
-    isOutOrWalk = true; // 타격 시 결과 처리
+  } else if (result.includes('타격')) {
+    isOutOrWalk = true;
   }
 
   const entry = {
@@ -159,7 +156,7 @@ function addPitch(result) {
     inning,
     batterOrder,
     result: finalResult,
-    isBall: result.includes('B') || result.includes('WP'),
+    isBall: result.includes('볼') || result.includes('폭투'),
     isEvent: isOutOrWalk
   };
 
@@ -168,7 +165,6 @@ function addPitch(result) {
   if (isOutOrWalk) {
     currentS = 0;
     currentB = 0;
-    // 판정 결과가 나오면 0.5초 뒤 자동으로 다음 타자로 전환 (시각적 확인을 위해 약간의 지연)
     setTimeout(() => {
       nextBatter();
       saveAndRender();
@@ -186,7 +182,7 @@ function saveAndRender() {
 }
 
 function updateCountDisplay() {
-  document.getElementById('countView').innerText = `B ${currentB} - S ${currentS}`;
+  document.getElementById('countView').innerText = `S ${currentS} - B ${currentB}`;
 }
 
 function updateBatterFacedDisplay() {
@@ -287,8 +283,8 @@ function nextBatter() {
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   const keyMap = {
-    's': 'SS(스윙)', 'c': 'CS(루킹)', 'f': 'F(파울)', 'h': 'H(타격)',
-    'b': 'B(볼)', 'w': 'WP(폭투)'
+    's': '스윙', 'c': '루킹', 'f': '파울', 'h': '타격',
+    'b': '볼', 'w': '폭투'
   };
   if (keyMap[e.key.toLowerCase()]) addPitch(keyMap[e.key.toLowerCase()]);
   if (e.key.toLowerCase() === 'p') nextInning();
