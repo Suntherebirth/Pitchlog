@@ -23,22 +23,27 @@
       padding: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 100;
     }
 
-    .title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; letter-spacing: 1px; }
+    .title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 5px; }
     
+    /* 실시간 볼카운트 표시 */
+    .count-display {
+      text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #ffeb3b;
+    }
+
     .inputs { display: flex; justify-content: center; gap: 10px; padding: 0 10px; }
     .inputs div { display: flex; align-items: center; background: rgba(255,255,255,0.15); padding: 6px 8px; border-radius: 6px; }
     .inputs label { font-size: 12px; font-weight: bold; margin-right: 5px; color: #ddd; }
-    .inputs input { width: 40px; border: none; border-radius: 4px; text-align: center; font-weight: bold; font-size: 16px; padding: 2px; }
+    .inputs input { width: 35px; border: none; border-radius: 4px; text-align: center; font-weight: bold; font-size: 16px; padding: 2px; }
     
-    .btn-step { background: #4a90e2; color: white; border: none; padding: 4px 8px; margin-left: 5px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .btn-step { background: #4a90e2; color: white; border: none; padding: 4px 8px; margin-left: 5px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 
-    /* 아이패드 가로 대응: 하단 여백을 250px로 충분히 확보 */
-    table { width: 100%; border-collapse: collapse; margin-top: 110px; margin-bottom: 250px; background: white; }
-    thead th { position: sticky; top: 100px; background: #eee; color: #333; padding: 10px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
+    table { width: 100%; border-collapse: collapse; margin-top: 140px; margin-bottom: 250px; background: white; }
+    thead th { position: sticky; top: 130px; background: #eee; color: #333; padding: 10px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
     tbody td { text-align: center; padding: 12px 8px; border-bottom: 1px solid #eee; font-size: 15px; }
     
     .row-strike { background-color: #f0f7ff; }
     .row-ball { background-color: #fff5f5; }
+    .row-event { background-color: #fff9db; font-weight: bold; color: var(--accent-red); } /* 삼진/볼넷 강조 */
 
     .footer {
       position: fixed; bottom: 0; width: 100%; background: white;
@@ -50,7 +55,7 @@
     .strike { background: #e3f2fd; color: #0d47a1; border-color: #bbdefb; }
     .ball { background: #ffebee; color: #b71c1c; border-color: #ffcdd2; }
     .system { background: #f5f5f5; color: #333; }
-    .reset { background: #333; color: white; } /* 전체 초기화 버튼 */
+    .reset { background: #333; color: white; }
     .save { background: var(--primary-blue); color: white; grid-column: span 2; font-size: 14px; }
     
     .pitch-btn:active { background: #ddd; transform: translateY(2px); }
@@ -60,7 +65,8 @@
 <body>
 
 <header>
-  <div class="title">EAGLES PITCH-LOG SYSTEM</div>
+  <div class="title">EAGLES PITCH-LOG</div>
+  <div id="countView" class="count-display">B: 0 | S: 0</div>
   <div class="inputs">
     <div><label>이닝</label><input id="inning" type="number" value="1" /><button class="btn-step" onclick="nextInning()">+1(P)</button></div>
     <div><label>타순</label><input id="batterOrder" type="number" value="1" /><button class="btn-step" onclick="nextBatter()">+1(L)</button></div>
@@ -93,9 +99,12 @@
 <script>
 let log = JSON.parse(localStorage.getItem('eaglesLog')) || [];
 let deleteMode = false;
+let currentS = 0;
+let currentB = 0;
 
 renderLog();
 updateBatterFacedDisplay();
+updateCountDisplay();
 
 function addPitch(result) {
   const inning = document.getElementById('inning').value;
@@ -104,19 +113,53 @@ function addPitch(result) {
   let lastEntry = log[log.length - 1];
   let currentBatterFaced = lastEntry ? lastEntry.batterFaced : 0;
   
+  // 타순이 바뀌거나 이닝이 바뀌면 '상대한 타자 수' 증가 및 카운트 리셋
   if (!lastEntry || lastEntry.batterOrder !== batterOrder || lastEntry.inning !== inning) {
     currentBatterFaced++;
+    currentS = 0;
+    currentB = 0;
+  }
+
+  // 스트라이크, 볼 판정 및 결과 보강
+  let finalResult = result;
+  let isOutOrWalk = false;
+
+  if (result.includes('SS') || result.includes('CS')) {
+    currentS++;
+    if (currentS >= 3) {
+      finalResult += " -> [K 삼진]";
+      isOutOrWalk = true;
+    }
+  } else if (result.includes('F')) {
+    if (currentS < 2) currentS++; // 2스트라이크 이전 파울만 카운트
+  } else if (result.includes('B') || result.includes('WP')) {
+    currentB++;
+    if (currentB >= 4) {
+      finalResult += " -> [BB 볼넷]";
+      isOutOrWalk = true;
+    }
+  } else if (result.includes('H')) {
+    isOutOrWalk = true; // 타격 시 다음 타자로 리셋
   }
 
   const entry = {
     batterFaced: currentBatterFaced,
     inning,
     batterOrder,
-    result,
-    isBall: result.includes('B') || result.includes('WP')
+    result: finalResult,
+    isBall: result.includes('B') || result.includes('WP'),
+    isEvent: isOutOrWalk
   };
 
   log.push(entry);
+  
+  if (isOutOrWalk) {
+    currentS = 0;
+    currentB = 0;
+    // 자동으로 다음 타순으로 넘어가길 원하시면 아래 주석을 해제하세요.
+    // nextBatter(); 
+  }
+
   saveAndRender();
 }
 
@@ -124,6 +167,11 @@ function saveAndRender() {
   localStorage.setItem('eaglesLog', JSON.stringify(log));
   renderLog();
   updateBatterFacedDisplay();
+  updateCountDisplay();
+}
+
+function updateCountDisplay() {
+  document.getElementById('countView').innerText = `B: ${currentB} | S: ${currentS}`;
 }
 
 function updateBatterFacedDisplay() {
@@ -137,7 +185,9 @@ function renderLog() {
   
   log.forEach((entry, index) => {
     const tr = document.createElement('tr');
-    tr.className = entry.isBall ? 'row-ball' : 'row-strike';
+    if (entry.isEvent) tr.className = 'row-event';
+    else tr.className = entry.isBall ? 'row-ball' : 'row-strike';
+    
     if(deleteMode) tr.classList.add('delete-mode-active');
     
     tr.innerHTML = `
@@ -152,18 +202,28 @@ function renderLog() {
     tbody.appendChild(tr);
   });
   
-  // 아이패드 가로모드 대응: 스크롤 위치를 최하단보다 약간 위로 조정하여 푸터에 가리지 않게 함
   setTimeout(() => {
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: 'smooth'
-    });
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   }, 50);
 }
 
 function deleteLastLog() {
   if (log.length > 0 && confirm("마지막 투구 기록을 삭제할까요?")) {
     log.pop();
+    // 마지막 기록 삭제 시 카운트 복구가 복잡하므로 리셋하거나 수동 조절 권장
+    currentS = 0;
+    currentB = 0;
+    saveAndRender();
+  }
+}
+
+function resetAll() {
+  if (confirm("모든 데이터를 초기화하시겠습니까?")) {
+    log = [];
+    currentS = 0;
+    currentB = 0;
+    document.getElementById('inning').value = 1;
+    document.getElementById('batterOrder').value = 1;
     saveAndRender();
   }
 }
@@ -172,19 +232,6 @@ function deleteIndex(index) {
   if (confirm(`${index + 1}번 투구를 삭제하시겠습니까?`)) {
     log.splice(index, 1);
     saveAndRender();
-  }
-}
-
-// 전체 초기화 기능
-function resetAll() {
-  if (confirm("경고: 모든 데이터가 삭제됩니다. 정말 초기화하시겠습니까?")) {
-    if (confirm("다시 한번 확인합니다. 저장되지 않은 데이터는 모두 사라집니다.")) {
-      log = [];
-      document.getElementById('inning').value = 1;
-      document.getElementById('batterOrder').value = 1;
-      saveAndRender();
-      alert("모든 데이터가 초기화되었습니다.");
-    }
   }
 }
 
@@ -197,12 +244,11 @@ function toggleDeleteMode() {
 }
 
 function downloadCSV() {
-  if (log.length === 0) return alert("기록된 데이터가 없습니다.");
+  if (log.length === 0) return alert("데이터가 없습니다.");
   let csv = '\uFEFF투구수,상대한타자수,이닝,타순,결과\n';
   log.forEach((entry, i) => {
     csv += `${i + 1},${entry.batterFaced},${entry.inning},${entry.batterOrder},${entry.result}\n`;
   });
-  
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -213,11 +259,15 @@ function downloadCSV() {
 function nextInning() {
   const input = document.getElementById('inning');
   input.value = parseInt(input.value) + 1;
+  currentS = 0; currentB = 0;
+  updateCountDisplay();
 }
 
 function nextBatter() {
   const input = document.getElementById('batterOrder');
   input.value = (parseInt(input.value) % 9) + 1;
+  currentS = 0; currentB = 0;
+  updateCountDisplay();
 }
 
 window.addEventListener('keydown', (e) => {
