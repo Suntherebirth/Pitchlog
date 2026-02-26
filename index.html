@@ -15,7 +15,6 @@
       margin: 0; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       background: var(--bg-light); 
-      padding-bottom: 140px; 
     }
     
     header {
@@ -24,17 +23,8 @@
       padding: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 100;
     }
 
-    .title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 5px; letter-spacing: 1px; }
+    .title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; letter-spacing: 1px; }
     
-    /* 단축키 안내 스타일 */
-    .shortcut-guide {
-      font-size: 11px;
-      text-align: center;
-      color: #ffeb3b;
-      margin-bottom: 10px;
-      font-weight: normal;
-    }
-
     .inputs { display: flex; justify-content: center; gap: 10px; padding: 0 10px; }
     .inputs div { display: flex; align-items: center; background: rgba(255,255,255,0.15); padding: 6px 8px; border-radius: 6px; }
     .inputs label { font-size: 12px; font-weight: bold; margin-right: 5px; color: #ddd; }
@@ -42,8 +32,9 @@
     
     .btn-step { background: #4a90e2; color: white; border: none; padding: 4px 8px; margin-left: 5px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 145px; background: white; }
-    thead th { position: sticky; top: 130px; background: #eee; color: #333; padding: 10px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
+    /* 로그가 가려지지 않도록 하단 여백을 대폭 늘림 (아이패드 가로 대응) */
+    table { width: 100%; border-collapse: collapse; margin-top: 110px; margin-bottom: 200px; background: white; }
+    thead th { position: sticky; top: 100px; background: #eee; color: #333; padding: 10px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
     tbody td { text-align: center; padding: 12px 8px; border-bottom: 1px solid #eee; font-size: 15px; }
     
     .row-strike { background-color: #f0f7ff; }
@@ -69,9 +60,6 @@
 
 <header>
   <div class="title">EAGLES PITCH-LOG SYSTEM</div>
-  <div class="shortcut-guide">
-    [P] 다음 이닝 | [L] 다음 타자 | [BS] 마지막 기록 취소
-  </div>
   <div class="inputs">
     <div><label>이닝</label><input id="inning" type="number" value="1" /><button class="btn-step" onclick="nextInning()">+1(P)</button></div>
     <div><label>타순</label><input id="batterOrder" type="number" value="1" /><button class="btn-step" onclick="nextBatter()">+1(L)</button></div>
@@ -89,15 +77,15 @@
 </table>
 
 <div class="footer">
-  <button class="pitch-btn strike" onclick="addPitch('SS(스윙)')">SS(S)</button>
-  <button class="pitch-btn strike" onclick="addPitch('CS(루킹)')">CS(C)</button>
-  <button class="pitch-btn strike" onclick="addPitch('F(파울)')">F(F)</button>
-  <button class="pitch-btn strike" onclick="addPitch('H(타격)')">H(H)</button>
-  <button class="pitch-btn ball" onclick="addPitch('B(볼)')">B(B)</button>
-  <button class="pitch-btn ball" onclick="addPitch('WP(폭투)')">WP(W)</button>
-  <button class="pitch-btn system" onclick="deleteLastLog()">↩취소</button>
+  <button class="pitch-btn strike" onclick="addPitch('SS(스윙)')">SS (S)</button>
+  <button class="pitch-btn strike" onclick="addPitch('CS(루킹)')">CS (C)</button>
+  <button class="pitch-btn strike" onclick="addPitch('F(파울)')">F (F)</button>
+  <button class="pitch-btn strike" onclick="addPitch('H(타격)')">H (H)</button>
+  <button class="pitch-btn ball" onclick="addPitch('B(볼)')">B (B)</button>
+  <button class="pitch-btn ball" onclick="addPitch('WP(폭투)')">WP (W)</button>
+  <button class="pitch-btn system" onclick="deleteLastLog()">↩취소 (BS)</button>
   <button class="pitch-btn system" onclick="toggleDeleteMode()" id="delModeBtn">🚫삭제</button>
-  <button class="pitch-btn save" onclick="downloadCSV()">💾 CSV 파일로 저장</button>
+  <button class="pitch-btn save" onclick="downloadCSV()">💾 CSV 저장</button>
 </div>
 
 <script>
@@ -162,7 +150,11 @@ function renderLog() {
     tbody.appendChild(tr);
   });
   
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  // 입력 시 가장 최근 로그가 화면 중앙에 보이도록 스크롤 조정
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: 'smooth'
+  });
 }
 
 function deleteLastLog() {
