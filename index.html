@@ -27,7 +27,6 @@
       padding: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 100;
     }
 
-    /* 제목 레이아웃 (로고 포함) */
     .header-top {
       display: flex;
       align-items: center;
@@ -37,7 +36,7 @@
     }
 
     .header-logo {
-      height: 24px; /* 제목 높이에 맞춘 로고 크기 */
+      height: 24px;
       width: auto;
       border-radius: 4px;
     }
@@ -146,6 +145,7 @@ function addPitch(result) {
   let lastEntry = log[log.length - 1];
   let currentBatterFaced = lastEntry ? lastEntry.batterFaced : 0;
   
+  // 타자가 바뀌었는지 확인
   if (!lastEntry || lastEntry.batterOrder !== batterOrder || lastEntry.inning !== inning) {
     currentBatterFaced++;
     currentS = 0;
@@ -154,6 +154,10 @@ function addPitch(result) {
 
   let finalResult = result;
   let isOutOrWalk = false;
+
+  // 카운트 계산 전 현재 상태 저장 (롤백용)
+  const prevS = currentS;
+  const prevB = currentB;
 
   if (result.includes('스윙') || result.includes('루킹')) {
     currentS++;
@@ -179,12 +183,15 @@ function addPitch(result) {
     batterOrder,
     result: finalResult,
     isBall: result.includes('볼') || result.includes('폭투'),
-    isEvent: isOutOrWalk
+    isEvent: isOutOrWalk,
+    preS: prevS, // 복구용 데이터 저장
+    preB: prevB
   };
 
   log.push(entry);
   
   if (isOutOrWalk) {
+    // 이벤트 발생 시 카운트는 0-0으로 가지만, 타순 변경은 딜레이 후 실행
     currentS = 0;
     currentB = 0;
     setTimeout(() => {
@@ -192,6 +199,28 @@ function addPitch(result) {
       saveAndRender();
     }, 100);
   } else {
+    saveAndRender();
+  }
+}
+
+function deleteLastLog() {
+  if (log.length === 0) return;
+  
+  if (confirm("마지막 투구 기록을 삭제하고 이전 상태로 되돌릴까요?")) {
+    const deletedEntry = log.pop();
+    
+    // 1. 타순 롤백: 만약 지운 기록이 타자 교체 기록(Event)이었다면 타순을 뒤로 한 칸
+    if (deletedEntry.isEvent) {
+      const orderInput = document.getElementById('batterOrder');
+      let prevOrder = parseInt(orderInput.value) - 1;
+      if (prevOrder < 1) prevOrder = 9;
+      orderInput.value = prevOrder;
+    }
+
+    // 2. 카운트 롤백: 지워진 투구 직전의 카운트로 복구
+    currentS = deletedEntry.preS;
+    currentB = deletedEntry.preB;
+
     saveAndRender();
   }
 }
@@ -238,15 +267,6 @@ function renderLog() {
   setTimeout(() => {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   }, 50);
-}
-
-function deleteLastLog() {
-  if (log.length > 0 && confirm("마지막 투구 기록을 삭제할까요?")) {
-    log.pop();
-    currentS = 0;
-    currentB = 0;
-    saveAndRender();
-  }
 }
 
 function resetAll() {
@@ -305,7 +325,7 @@ function nextBatter() {
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   const keyMap = {
-    's': '스윙', 'c': '루킹', 'f': '파울', 'h': '타격',
+    's': '스윙S', 'c': '루킹S', 'f': '파울', 'h': '타격',
     'b': '볼', 'w': '폭투'
   };
   if (keyMap[e.key.toLowerCase()]) addPitch(keyMap[e.key.toLowerCase()]);
