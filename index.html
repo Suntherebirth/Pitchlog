@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>이글스 피치로그 시스템</title>
+  
+  <link rel="apple-touch-icon" href="IMG_8161.png">
+  <link rel="shortcut icon" href="IMG_8161.png">
+
   <style>
     :root {
       --primary-blue: #002D56;
@@ -23,9 +27,23 @@
       padding: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 100;
     }
 
-    .title { font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 5px; color: #fff; }
+    /* 제목 레이아웃 (로고 포함) */
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+
+    .header-logo {
+      height: 24px; /* 제목 높이에 맞춘 로고 크기 */
+      width: auto;
+      border-radius: 4px;
+    }
+
+    .title { font-size: 16px; font-weight: bold; letter-spacing: 1px; color: #fff; }
     
-    /* 볼카운트 전광판 (S-B 순서로 변경) */
     .count-display {
       text-align: center; font-size: 20px; font-weight: 800; margin-bottom: 8px; 
       color: #ffeb3b; text-shadow: 1px 1px 2px black;
@@ -42,11 +60,11 @@
     thead th { position: sticky; top: 125px; background: #eee; color: #333; padding: 10px 5px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
     tbody td { text-align: center; padding: 12px 5px; border-bottom: 1px solid #eee; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     
-    th:nth-child(1), td:nth-child(1) { width: 10%; } /* # */
-    th:nth-child(2), td:nth-child(2) { width: 12%; } /* 이닝 */
-    th:nth-child(3), td:nth-child(3) { width: 12%; } /* 타순 */
-    th:nth-child(4), td:nth-child(4) { width: 51%; } /* 결과 */
-    th:nth-child(5), td:nth-child(5) { width: 15%; font-size: 11px; color: #666; } /* 타자상대 */
+    th:nth-child(1), td:nth-child(1) { width: 10%; } 
+    th:nth-child(2), td:nth-child(2) { width: 12%; } 
+    th:nth-child(3), td:nth-child(3) { width: 12%; } 
+    th:nth-child(4), td:nth-child(4) { width: 51%; } 
+    th:nth-child(5), td:nth-child(5) { width: 15%; font-size: 11px; color: #666; } 
 
     .row-strike { background-color: #f0f7ff; }
     .row-ball { background-color: #fff5f5; }
@@ -72,7 +90,11 @@
 <body>
 
 <header>
-  <div class="title">이글스 피치로그 시스템</div>
+  <div class="header-top">
+    <img src="IMG_8161.png" class="header-logo" alt="logo">
+    <div class="title">이글스 피치로그 시스템</div>
+    <img src="IMG_8161.png" class="header-logo" alt="logo">
+  </div>
   <div id="countView" class="count-display">S 0 - B 0</div>
   <div class="inputs">
     <div><label>이닝</label><input id="inning" type="number" value="1" /><button class="btn-step" onclick="nextInning()">+1(P)</button></div>
