@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>이글스 피치로그 - 감독님용</title>
+  <title>이글스 피치로그 시스템</title>
   <style>
-    /* 🦅 아마추어 야구단 이글스 실무형 디자인 */
     :root {
-      --primary-blue: #002D56; /* 차분한 네이비 */
+      --primary-blue: #002D56;
       --accent-red: #D32F2F;
       --bg-light: #F8F9FA;
     }
@@ -25,8 +24,17 @@
       padding: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 100;
     }
 
-    .title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; letter-spacing: 1px; }
+    .title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 5px; letter-spacing: 1px; }
     
+    /* 단축키 안내 스타일 */
+    .shortcut-guide {
+      font-size: 11px;
+      text-align: center;
+      color: #ffeb3b;
+      margin-bottom: 10px;
+      font-weight: normal;
+    }
+
     .inputs { display: flex; justify-content: center; gap: 10px; padding: 0 10px; }
     .inputs div { display: flex; align-items: center; background: rgba(255,255,255,0.15); padding: 6px 8px; border-radius: 6px; }
     .inputs label { font-size: 12px; font-weight: bold; margin-right: 5px; color: #ddd; }
@@ -34,12 +42,11 @@
     
     .btn-step { background: #4a90e2; color: white; border: none; padding: 4px 8px; margin-left: 5px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 130px; background: white; }
-    thead th { position: sticky; top: 115px; background: #eee; color: #333; padding: 10px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
+    table { width: 100%; border-collapse: collapse; margin-top: 145px; background: white; }
+    thead th { position: sticky; top: 130px; background: #eee; color: #333; padding: 10px; font-size: 13px; border-bottom: 2px solid #ccc; z-index: 50; }
     tbody td { text-align: center; padding: 12px 8px; border-bottom: 1px solid #eee; font-size: 15px; }
     
-    /* 결과별 행 색상 (가독성) */
-    .row-strike { background-color: #f0f7ff; } /* 투구 결과 강조 */
+    .row-strike { background-color: #f0f7ff; }
     .row-ball { background-color: #fff5f5; }
 
     .footer {
@@ -62,9 +69,12 @@
 
 <header>
   <div class="title">EAGLES PITCH-LOG SYSTEM</div>
+  <div class="shortcut-guide">
+    [P] 다음 이닝 | [L] 다음 타자 | [BS] 마지막 기록 취소
+  </div>
   <div class="inputs">
-    <div><label>이닝</label><input id="inning" type="number" value="1" /><button class="btn-step" onclick="nextInning()">+1</button></div>
-    <div><label>타순</label><input id="batterOrder" type="number" value="1" /><button class="btn-step" onclick="nextBatter()">+1</button></div>
+    <div><label>이닝</label><input id="inning" type="number" value="1" /><button class="btn-step" onclick="nextInning()">+1(P)</button></div>
+    <div><label>타순</label><input id="batterOrder" type="number" value="1" /><button class="btn-step" onclick="nextBatter()">+1(L)</button></div>
     <div><label>타자수</label><input id="batterFacedInput" type="number" value="0" readonly /></div>
   </div>
 </header>
@@ -79,12 +89,12 @@
 </table>
 
 <div class="footer">
-  <button class="pitch-btn strike" onclick="addPitch('SS(스윙)')">SS</button>
-  <button class="pitch-btn strike" onclick="addPitch('CS(루킹)')">CS</button>
-  <button class="pitch-btn strike" onclick="addPitch('F(파울)')">F</button>
-  <button class="pitch-btn strike" onclick="addPitch('H(타격)')">H</button>
-  <button class="pitch-btn ball" onclick="addPitch('B(볼)')">B</button>
-  <button class="pitch-btn ball" onclick="addPitch('WP(폭투)')">WP</button>
+  <button class="pitch-btn strike" onclick="addPitch('SS(스윙)')">SS(S)</button>
+  <button class="pitch-btn strike" onclick="addPitch('CS(루킹)')">CS(C)</button>
+  <button class="pitch-btn strike" onclick="addPitch('F(파울)')">F(F)</button>
+  <button class="pitch-btn strike" onclick="addPitch('H(타격)')">H(H)</button>
+  <button class="pitch-btn ball" onclick="addPitch('B(볼)')">B(B)</button>
+  <button class="pitch-btn ball" onclick="addPitch('WP(폭투)')">WP(W)</button>
   <button class="pitch-btn system" onclick="deleteLastLog()">↩취소</button>
   <button class="pitch-btn system" onclick="toggleDeleteMode()" id="delModeBtn">🚫삭제</button>
   <button class="pitch-btn save" onclick="downloadCSV()">💾 CSV 파일로 저장</button>
@@ -104,7 +114,6 @@ function addPitch(result) {
   let lastEntry = log[log.length - 1];
   let currentBatterFaced = lastEntry ? lastEntry.batterFaced : 0;
   
-  // 타순이 바뀌거나 이닝이 바뀌면 '상대한 타자 수' 증가
   if (!lastEntry || lastEntry.batterOrder !== batterOrder || lastEntry.inning !== inning) {
     currentBatterFaced++;
   }
@@ -202,7 +211,6 @@ function nextBatter() {
   input.value = (parseInt(input.value) % 9) + 1;
 }
 
-// 감독님을 위한 단축키 유지
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   const keyMap = {
