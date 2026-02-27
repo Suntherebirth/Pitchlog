@@ -28,19 +28,11 @@
     }
 
     .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 5px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin-bottom: 5px;
     }
 
-    .header-logo {
-      height: 24px;
-      width: auto;
-      border-radius: 4px;
-    }
-
+    .header-logo { height: 24px; width: auto; border-radius: 4px; }
     .title { font-size: 16px; font-weight: bold; letter-spacing: 1px; color: #fff; }
     
     .count-display {
@@ -71,16 +63,16 @@
 
     .footer {
       position: fixed; bottom: 0; width: 100%; background: white;
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;
       padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); z-index: 100; box-sizing: border-box;
     }
 
-    .pitch-btn { padding: 15px 2px; font-size: 12px; font-weight: bold; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; transition: 0.1s; }
+    .pitch-btn { padding: 15px 1px; font-size: 11px; font-weight: bold; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; transition: 0.1s; }
     .strike { background: #e3f2fd; color: #0d47a1; border-color: #bbdefb; }
     .ball { background: #ffebee; color: #b71c1c; border-color: #ffcdd2; }
     .system { background: #f5f5f5; color: #333; }
     .reset { background: #333; color: white; }
-    .save { background: var(--primary-blue); color: white; grid-column: span 2; font-size: 14px; }
+    .save { background: var(--primary-blue); color: white; grid-column: span 2; font-size: 13px; }
     
     .pitch-btn:active { background: #ddd; transform: translateY(2px); }
     .delete-mode-active { background-color: #ffeb3b !important; border: 2px dashed red !important; }
@@ -105,23 +97,20 @@
 <table id="logTable">
   <thead>
     <tr>
-      <th>#</th>
-      <th>이닝</th>
-      <th>타순</th>
-      <th>결과</th>
-      <th>타자상대</th>
+      <th>#</th><th>이닝</th><th>타순</th><th>결과</th><th>타자상대</th>
     </tr>
   </thead>
   <tbody id="logBody"></tbody>
 </table>
 
 <div class="footer">
-  <button class="pitch-btn strike" onclick="addPitch('스윙S')">스윙 (S)</button>
-  <button class="pitch-btn strike" onclick="addPitch('루킹S')">루킹 (C)</button>
-  <button class="pitch-btn strike" onclick="addPitch('파울')">파울 (F)</button>
-  <button class="pitch-btn strike" onclick="addPitch('타격')">타격 (H)</button>
-  <button class="pitch-btn ball" onclick="addPitch('볼')">볼 (B)</button>
-  <button class="pitch-btn ball" onclick="addPitch('폭투')">폭투 (W)</button>
+  <button class="pitch-btn strike" onclick="addPitch('스윙S')">스윙(S)</button>
+  <button class="pitch-btn strike" onclick="addPitch('루킹S')">루킹(C)</button>
+  <button class="pitch-btn strike" onclick="addPitch('파울')">파울(F)</button>
+  <button class="pitch-btn strike" onclick="addPitch('타격')">타격(H)</button>
+  <button class="pitch-btn ball" onclick="addPitch('볼')">볼(B)</button>
+  <button class="pitch-btn ball" onclick="addPitch('폭투')">폭투(W)</button>
+  <button class="pitch-btn ball" onclick="addPitch('사구')">사구(D)</button>
   <button class="pitch-btn system" onclick="deleteLastLog()">↩취소(BS)</button>
   <button class="pitch-btn system" onclick="toggleDeleteMode()" id="delModeBtn">🚫삭제</button>
   <button class="pitch-btn reset" onclick="resetAll()">🧹초기화</button>
@@ -145,7 +134,6 @@ function addPitch(result) {
   let lastEntry = log[log.length - 1];
   let currentBatterFaced = lastEntry ? lastEntry.batterFaced : 0;
   
-  // 타자가 바뀌었는지 확인
   if (!lastEntry || lastEntry.batterOrder !== batterOrder || lastEntry.inning !== inning) {
     currentBatterFaced++;
     currentS = 0;
@@ -154,8 +142,6 @@ function addPitch(result) {
 
   let finalResult = result;
   let isOutOrWalk = false;
-
-  // 카운트 계산 전 현재 상태 저장 (롤백용)
   const prevS = currentS;
   const prevB = currentB;
 
@@ -175,6 +161,9 @@ function addPitch(result) {
     }
   } else if (result.includes('타격')) {
     isOutOrWalk = true;
+  } else if (result.includes('사구')) {
+    finalResult += " -> [사구HBP]";
+    isOutOrWalk = true;
   }
 
   const entry = {
@@ -182,16 +171,15 @@ function addPitch(result) {
     inning,
     batterOrder,
     result: finalResult,
-    isBall: result.includes('볼') || result.includes('폭투'),
+    isBall: result.includes('볼') || result.includes('폭투') || result.includes('사구'),
     isEvent: isOutOrWalk,
-    preS: prevS, // 복구용 데이터 저장
+    preS: prevS,
     preB: prevB
   };
 
   log.push(entry);
   
   if (isOutOrWalk) {
-    // 이벤트 발생 시 카운트는 0-0으로 가지만, 타순 변경은 딜레이 후 실행
     currentS = 0;
     currentB = 0;
     setTimeout(() => {
@@ -205,22 +193,16 @@ function addPitch(result) {
 
 function deleteLastLog() {
   if (log.length === 0) return;
-  
   if (confirm("마지막 투구 기록을 삭제하고 이전 상태로 되돌릴까요?")) {
     const deletedEntry = log.pop();
-    
-    // 1. 타순 롤백: 만약 지운 기록이 타자 교체 기록(Event)이었다면 타순을 뒤로 한 칸
     if (deletedEntry.isEvent) {
       const orderInput = document.getElementById('batterOrder');
       let prevOrder = parseInt(orderInput.value) - 1;
       if (prevOrder < 1) prevOrder = 9;
       orderInput.value = prevOrder;
     }
-
-    // 2. 카운트 롤백: 지워진 투구 직전의 카운트로 복구
     currentS = deletedEntry.preS;
     currentB = deletedEntry.preB;
-
     saveAndRender();
   }
 }
@@ -244,36 +226,21 @@ function updateBatterFacedDisplay() {
 function renderLog() {
   const tbody = document.getElementById('logBody');
   tbody.innerHTML = '';
-  
   log.forEach((entry, index) => {
     const tr = document.createElement('tr');
     if (entry.isEvent) tr.className = 'row-event';
     else tr.className = entry.isBall ? 'row-ball' : 'row-strike';
-    
     if(deleteMode) tr.classList.add('delete-mode-active');
-    
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${entry.inning}</td>
-      <td>${entry.batterOrder}</td>
-      <td>${entry.result}</td>
-      <td>${entry.batterFaced}</td>
-    `;
-    
+    tr.innerHTML = `<td>${index + 1}</td><td>${entry.inning}</td><td>${entry.batterOrder}</td><td>${entry.result}</td><td>${entry.batterFaced}</td>`;
     tr.onclick = () => { if(deleteMode) deleteIndex(index); };
     tbody.appendChild(tr);
   });
-  
-  setTimeout(() => {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-  }, 50);
+  setTimeout(() => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }, 50);
 }
 
 function resetAll() {
   if (confirm("모든 데이터를 초기화하시겠습니까?")) {
-    log = [];
-    currentS = 0;
-    currentB = 0;
+    log = []; currentS = 0; currentB = 0;
     document.getElementById('inning').value = 1;
     document.getElementById('batterOrder').value = 1;
     saveAndRender();
@@ -291,16 +258,13 @@ function toggleDeleteMode() {
   deleteMode = !deleteMode;
   const btn = document.getElementById('delModeBtn');
   btn.style.background = deleteMode ? "#ffeb3b" : "#f5f5f5";
-  btn.style.color = "black";
   renderLog();
 }
 
 function downloadCSV() {
   if (log.length === 0) return alert("데이터가 없습니다.");
   let csv = '\uFEFF투구수,이닝,타순,결과,상대한타자수\n';
-  log.forEach((entry, i) => {
-    csv += `${i + 1},${entry.inning},${entry.batterOrder},${entry.result},${entry.batterFaced}\n`;
-  });
+  log.forEach((entry, i) => { csv += `${i + 1},${entry.inning},${entry.batterOrder},${entry.result},${entry.batterFaced}\n`; });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -326,7 +290,7 @@ window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   const keyMap = {
     's': '스윙S', 'c': '루킹S', 'f': '파울', 'h': '타격',
-    'b': '볼', 'w': '폭투'
+    'b': '볼', 'w': '폭투', 'd': '사구'
   };
   if (keyMap[e.key.toLowerCase()]) addPitch(keyMap[e.key.toLowerCase()]);
   if (e.key.toLowerCase() === 'p') nextInning();
